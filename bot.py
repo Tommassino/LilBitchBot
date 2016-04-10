@@ -5,8 +5,12 @@ import model
 
 client = discord.Client()
 
+bitchCounter = model.JsonDictionary('lilbitch')
+
 handles = {
-  re.compile('^!hello$'): model.StringReply('Hello {0.author.mention}')  
+	re.compile('^!hello$'): model.StringReply('Hello {0.author.mention}'),
+	re.compile('.*lil.*bitch.*'): model.UserIncrement(bitchCounter),
+	re.compile('^!top$'): model.ListTop(bitchCounter,3)
 }
 
 @client.event
@@ -20,11 +24,8 @@ def on_message(message):
 		match = regexp.match(message.content)
 		if match:
 			msg = handles[regexp](message,match)
-			yield from client.send_message(message.channel, msg)
-
-#    if message.content.startswith('!hello'):
-#        msg = 'Hello {0.author.mention}'.format(message)
-#        yield from client.send_message(message.channel, msg)
+			if msg:
+				yield from client.send_message(message.channel, msg)
 
 @client.event
 @asyncio.coroutine
