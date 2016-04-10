@@ -9,7 +9,10 @@ bitchCounter = model.JsonDictionary('lilbitch')
 
 handles = {
 	re.compile('^!hello$'): model.StringReply('Hello {0.author.mention}'),
+	re.compile('^!help$'): model.StringReply('Try !hello, !top or !source'),
+	re.compile('^!source$'): model.StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
 	re.compile('.*lil.*bitch.*'): model.UserIncrement(bitchCounter),
+	re.compile('.*who.*lil.*bitch.*'): model.ReplyTop(bitchCounter),
 	re.compile('^!top$'): model.ListTop(bitchCounter,3)
 }
 

@@ -28,12 +28,22 @@ class ListTop(object):
 		self.top=top
 
 	def __call__(self, msg, mc):
-		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1))
+		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
 		message = 'The top lil bitches:'
 		for i in range(0, min(len(self.dict),self.top)):
 			item = sorted_dict[i]
 			message=message+"\n{0}: {1}".format(item[0].split(':')[0],item[1])
 		return message
+
+class ReplyTop(object):
+	def __init__(self, dict):
+		self.dict=dict
+
+	def __call__(self,msg,mc):
+		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
+		if len(sorted_dict)>0:
+			top = sorted_dict[0]
+			return "{0} is a lil bitch!".format(top[0].split(':')[0])
 		
 class JsonDictionary(object):
 	def __init__(self, name):
