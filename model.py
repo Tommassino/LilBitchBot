@@ -1,6 +1,25 @@
 import json
 import os.path
 import operator
+import urllib.request
+import html.parser
+
+
+class RandomJoke(object):
+	def __init__(self, url, jsonpath):
+		self.parser=html.parser.HTMLParser()
+		self.url=url
+		self.jsonpath=jsonpath
+	
+	def __call__(self, msg, mtc):
+		data=urllib.request.urlopen(self.url).read().decode('utf-8')
+		js = json.loads(data)
+		current = js
+		for last in self.jsonpath:
+			current = current[last]
+		return self.parser.unescape(current)
+
+		
 
 class StringReply(object):
 	def __init__(self, message):

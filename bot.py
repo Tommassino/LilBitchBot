@@ -14,7 +14,9 @@ handles = {
 	re.compile('^!source$'): model.StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
 	re.compile('.*lil.*bitch.*'): model.UserIncrement(bitchCounter),
 	re.compile('.*who.*lil.*bitch.*'): model.ReplyTop(bitchCounter),
-	re.compile('^!top$'): model.ListTop(bitchCounter,3)
+	re.compile('^!top$'): model.ListTop(bitchCounter,3),
+	re.compile('^!chuck$'): model.RandomJoke("http://api.icndb.com/jokes/random",['value','joke']),
+	re.compile('^!joke$'): model.RandomJoke("http://tambal.azurewebsites.net/joke/random",['joke'])
 }
 
 @client.event
