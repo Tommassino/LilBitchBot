@@ -2,6 +2,7 @@ import discord
 import asyncio
 import re
 import model
+import json
 
 client = discord.Client()
 
@@ -38,4 +39,10 @@ def on_ready():
 	print(client.user.id)
 	print('------')
 
-client.run('MTY4Mjg3NzM5Mzg3NTc2MzIw.Ceqg8g.Iza6GzBqdz_iTjYETle3G1codcM')
+config = {}
+
+with open('config.json','r') as fp:
+	config=json.load(fp)
+
+
+client.run(config['token'])
