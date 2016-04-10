@@ -1,20 +1,28 @@
 import discord
 import asyncio
+import re
+import model
 
 client = discord.Client()
+
+handles = {
+  '^!hello$', StringReply('Hello {0.author.mention}')  
+}
 
 @client.event
 @asyncio.coroutine
 def on_message(message):
     # we do not want the bot to reply to itself
-    print(message.content)
     if message.author == client.user:
         return
-    print(message.content.startswith("!hello"))
 
-    if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        yield from client.send_message(message.channel, msg)
+    for regexp,functor in handles.iteritems():
+        if re.match(regexp,message.content):
+            functor(message)
+
+#    if message.content.startswith('!hello'):
+#        msg = 'Hello {0.author.mention}'.format(message)
+#        yield from client.send_message(message.channel, msg)
 
 @client.event
 @asyncio.coroutine
