@@ -16,7 +16,8 @@ handles = {
 	re.compile('.*who.*lil.*bitch.*'): model.ReplyTop(bitchCounter),
 	re.compile('^!top$'): model.ListTop(bitchCounter,3),
 	re.compile('^!chuck$'): model.RandomJoke("http://api.icndb.com/jokes/random",['value','joke']),
-	re.compile('^!joke$'): model.RandomJoke("http://tambal.azurewebsites.net/joke/random",['joke'])
+	re.compile('^!joke$'): model.RandomJoke("http://tambal.azurewebsites.net/joke/random",['joke']),
+	re.compile('^!kick .*$'): model.Kick()
 }
 
 @client.event
@@ -29,9 +30,11 @@ def on_message(message):
 	for regexp in handles:
 		match = regexp.match(message.content)
 		if match:
-			msg = handles[regexp](message,match)
-			if msg:
-				yield from client.send_message(message.channel, msg)
+			yld = handles[regexp](message,match,client)
+
+			if yld:
+				return yld
+#				yield from client.send_message(message.channel, msg)
 
 @client.event
 @asyncio.coroutine

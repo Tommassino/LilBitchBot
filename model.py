@@ -3,7 +3,25 @@ import os.path
 import operator
 import urllib.request
 import html.parser
+import asyncio
 
+
+class Kick(object):
+	def __init__(self):
+		pass
+
+	def __call__(self, msg, mtc, cli):
+		if not msg.author.name=='Tommassino':
+			return None
+		name=msg.content.split(' ')[1]
+		find = None
+		for m in msg.author.server.members:
+			if m.name==name:
+				find=m
+				break
+		print(find)
+
+		yield from cli.kick(find)
 
 class RandomJoke(object):
 	def __init__(self, url, jsonpath):
@@ -11,13 +29,13 @@ class RandomJoke(object):
 		self.url=url
 		self.jsonpath=jsonpath
 	
-	def __call__(self, msg, mtc):
+	def __call__(self, msg, mtc, client):
 		data=urllib.request.urlopen(self.url).read().decode('utf-8')
 		js = json.loads(data)
 		current = js
 		for last in self.jsonpath:
 			current = current[last]
-		return self.parser.unescape(current)
+		yield from client.send_message(msg.channel, self.parser.unescape(current))
 
 		
 
@@ -25,15 +43,15 @@ class StringReply(object):
 	def __init__(self, message):
 		self.message=message
     
-	def __call__(self, orig_message, match): 
+	def __call__(self, orig_message, match, client): 
 		msg = self.message.format(orig_message)
-		return msg
+		yield from client.send_message(message.channel,msg)
     
 class UserIncrement(object):
 	def __init__(self, user_dict):
 		self.user_dict=user_dict
 
-	def __call__(self, orig_message, match):
+	def __call__(self, orig_message, match,client):
 		dict=self.user_dict
 		author=orig_message.author.name+':'+orig_message.author.id
 		if author not in dict:
@@ -46,23 +64,23 @@ class ListTop(object):
 		self.dict=dict
 		self.top=top
 
-	def __call__(self, msg, mc):
+	def __call__(self, msg, mc,client):
 		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
 		message = 'The top lil bitches:'
 		for i in range(0, min(len(self.dict),self.top)):
 			item = sorted_dict[i]
 			message=message+"\n{0}: {1}".format(item[0].split(':')[0],item[1])
-		return message
+		yield from client.send_message(msg.channel,message)
 
 class ReplyTop(object):
 	def __init__(self, dict):
 		self.dict=dict
 
-	def __call__(self,msg,mc):
+	def __call__(self,msg,mc,client):
 		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
 		if len(sorted_dict)>0:
 			top = sorted_dict[0]
-			return "{0} is a lil bitch!".format(top[0].split(':')[0])
+			yield from client.send_message(msg.channel,"{0} is a lil bitch!".format(top[0].split(':')[0]))
 		
 class JsonDictionary(object):
 	def __init__(self, name):
@@ -102,3 +120,4 @@ class JsonDictionary(object):
 		with open(file,'w') as fp:
 			json.dump(self.dict,fp)
 		
+
