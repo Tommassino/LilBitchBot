@@ -4,6 +4,7 @@ import operator
 import urllib.request
 import html.parser
 import asyncio
+import time
 
 
 class Kick(object):
@@ -45,19 +46,36 @@ class StringReply(object):
     
 	def __call__(self, orig_message, match, client): 
 		msg = self.message.format(orig_message)
-		yield from client.send_message(message.channel,msg)
+		yield from client.send_message(orig_message.channel,msg)
     
 class UserIncrement(object):
 	def __init__(self, user_dict):
 		self.user_dict=user_dict
+		self.timeout_dict={}
+		self.timeout=10
 
 	def __call__(self, orig_message, match,client):
 		dict=self.user_dict
 		author=orig_message.author.name+':'+orig_message.author.id
 		if author not in dict:
 			dict[author]=0
+		tm=time.time()
+		if orig_message.author.id in self.timeout_dict and tm-self.timeout_dict[orig_message.author.id] < 10:
+			return None
+		self.timeout_dict[orig_message.author.id]=tm
 		dict[author]=dict[author]+1
 		return None
+
+class ListBitch(object):
+	def __init__(self, dict):
+		self.dict=dict
+
+	def __call__(self, msg, mc, cl):
+		author=msg.author.name+':'+msg.author.id
+		count=0
+		if author in self.dict:
+			count=self.dict[author]
+		yield from cl.send_message(msg.channel,"You have {0} lil bitches!".format(count))
 
 class ListTop(object):
 	def __init__(self, dict, top):

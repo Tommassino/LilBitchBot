@@ -12,12 +12,13 @@ handles = {
 	re.compile('^!hello$'): model.StringReply('Hello {0.author.mention}'),
 	re.compile('^!help$'): model.StringReply('Try !hello, !top or !source'),
 	re.compile('^!source$'): model.StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
-	re.compile('.*lil.*bitch.*'): model.UserIncrement(bitchCounter),
-	re.compile('.*who.*lil.*bitch.*'): model.ReplyTop(bitchCounter),
+	re.compile('.*lil.*bitch.*', flags=re.IGNORECASE): model.UserIncrement(bitchCounter),
+	re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE): model.ReplyTop(bitchCounter),
 	re.compile('^!top$'): model.ListTop(bitchCounter,3),
 	re.compile('^!chuck$'): model.RandomJoke("http://api.icndb.com/jokes/random",['value','joke']),
-	re.compile('^!joke$'): model.RandomJoke("http://tambal.azurewebsites.net/joke/random",['joke']),
-	re.compile('^!kick .*$'): model.Kick()
+#	re.compile('^!joke$'): model.RandomJoke("https://webknox-jokes.p.mashape.com/jokes/random",['joke']),
+	re.compile('^!kick .*$'): model.Kick(),
+	re.compile('^am i a lil bitch.*$', flags=re.IGNORECASE): model.ListBitch(bitchCounter)
 }
 
 @client.event
