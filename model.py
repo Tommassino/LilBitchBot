@@ -5,6 +5,32 @@ import urllib.request
 import html.parser
 import asyncio
 import time
+import discord
+
+voiceChannel=None
+class JoinVoice(object):
+	def __init__(self,cmd):
+		self.cmd=cmd
+
+	def __call__(self,msg,mtc,cli):
+		global voiceChannel
+		channel_name=msg.content[len(self.cmd):].strip()
+		check = lambda c: c.name == channel_name and c.type == discord.ChannelType.voice
+		channel = discord.utils.find(check,msg.server.channels)
+		if channel is None:
+			yield from cli.send_message(msg.channel,"Invalid channel name")
+			return
+		voiceChannel = yield from cli.join_voice_channel(channel)
+
+class PlaySound(object):
+	def __init__(self,cmd):
+		self.cmd=cmd
+
+	def __call__(self,msg,mtc,cli):
+		global voiceChannel
+		file = msg.content[len(self.cmd):].strip()+".wav"
+		player = voiceChannel.create_ffmpeg_player(file)
+		player.start()
 
 
 class Kick(object):
