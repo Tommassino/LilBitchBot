@@ -6,14 +6,14 @@ import os.path
 import operator
 
 class Module(object):
-	def __init__(self):
+	def __init__(self, wrapper):
 		self.bitchCounter = JsonDictionary('lilbitch')
-
-	def register(self,client):
-		client.messageHooks[re.compile('.*lil.*bitch.*', flags=re.IGNORECASE)] = UserIncrement(self.bitchCounter)
-		client.messageHooks[re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE)] = ReplyTop(self.bitchCounter)
-		client.messageHooks[re.compile('^!top$')] = ListTop(self.bitchCounter,3)
-		client.messageHooks[re.compile('^am i a lil bitch.*$', flags=re.IGNORECASE)] = ListBitch(self.bitchCounter)
+		self.messageHooks = {
+			re.compile('.*lil.*bitch.*', flags=re.IGNORECASE): UserIncrement(self.bitchCounter),
+			re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE): ReplyTop(self.bitchCounter),
+			re.compile('^!top$'): ListTop(self.bitchCounter,3),
+			re.compile('^am i a lil bitch.*$', flags=re.IGNORECASE): ListBitch(self.bitchCounter)
+		}
 
 class UserIncrement(object):
 	def __init__(self, user_dict):

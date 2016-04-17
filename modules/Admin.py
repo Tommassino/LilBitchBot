@@ -3,13 +3,12 @@ import re
 import asyncio
 
 class Module(object):
-	def __init__(self):
-		pass
-
-	def register(self,client):
-		self.admins = client.config['admins']
-		client.messageHooks[re.compile('^!kick .*$')] = Kick(self)
-		client.messageHooks[re.compile('^!reload .*$')] = ReloadModule(self,client)
+	def __init__(self, wrapper):
+		self.admins = wrapperconfig['admins']
+		self.messageHooks = {
+			re.compile('^!kick .*$'): Kick(self),
+			re.compile('^!reload .*$'): ReloadModule(self,client)
+		}
 
 class Kick(object):
 	def __init__(self, module):

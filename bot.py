@@ -11,7 +11,7 @@ from importlib.machinery import SourceFileLoader
 class ClientConfig(object):
 	def __init__(self, client, configPath):
 		self.client=client
-		self.messageHooks={} 
+		self.modules = {} 
 		self.config = {}
 	
 		with open(configPath,'r') as fp:
@@ -23,16 +23,20 @@ class ClientConfig(object):
 			dir,mod = f.rsplit('/',1)
 			mod,py = mod.rsplit('.',1)
 			print('\t{0}'.format(mod))
-			load_module(mod)
+			self.load_module(mod)
 
-	def load_module(self, module, reload):
+	def load_module(self, mod):
+		file = glob.glob("modules/{0}.py".format(mod)
+		if len(file)==0 or not isfile(file[0]):
+			return None
+		f = file[0]
 		module = None
 		if reload:
 			module = SourceFileLoader(mod,f).reload_module()
 		else:
 			module = SourceFileLoader(mod,f).load_module()
 		init = module.Module()
-		init.register(self)
+		self.modules[mod]=init
 
 client = discord.Client()		
 
