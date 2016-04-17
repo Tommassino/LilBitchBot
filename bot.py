@@ -48,15 +48,15 @@ def on_message(message):
 
 	for moduleName in wrapper.modules:
 		module = wrapper.modules[moduleName]
+		if not hasattr(module,'messageHooks'):
+			continue
 		for regexp in module.messageHooks:
-#			print(regexp)
 			match = regexp.match(message.content)
 			if match:
 				yld = module.messageHooks[regexp](message,match,wrapper.client)
 
 				if yld:
 					return yld
-lasttime=0
 
 @client.event
 @asyncio.coroutine
@@ -64,13 +64,14 @@ def on_member_update(before, after):
 	global lasttime
 	for attr in dir(after):
 		if not callable(getattr(after,attr)) and not getattr(after,attr)==getattr(before,attr):
-			print(attr)
-			print(getattr(before,attr))
-			print(getattr(after,attr))
-	if before.status==discord.Status.offline and after.status==discord.Status.online:
-		if time.time()-lasttime>10:
-			lasttime=time.time()
-			yield from client.send_message(after.server,'Welcome back {0.name} you lil bitch!'.format(before)) 
+			for moduleName in wrapper.modules:
+				module = wrapper.modules[moduleName]
+				if not hasattr(module,'memberUpdateHooks'):
+					continue
+				for hook in module.memberUpdateHooks:
+					yld = hook(attr,before,after)
+					if yld:
+						return yld 
 
 @client.event
 @asyncio.coroutine
