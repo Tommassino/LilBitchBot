@@ -3,12 +3,13 @@ import re
 import asyncio
 import json
 import os.path
+import operator
 
 class Module(object):
 	def __init__(self):
 		self.bitchCounter = JsonDictionary('lilbitch')
 
-	def register(client):
+	def register(self,client):
 		client.messageHooks[re.compile('.*lil.*bitch.*', flags=re.IGNORECASE)] = UserIncrement(self.bitchCounter)
 		client.messageHooks[re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE)] = ReplyTop(self.bitchCounter)
 		client.messageHooks[re.compile('^!top$')] = ListTop(self.bitchCounter,3)

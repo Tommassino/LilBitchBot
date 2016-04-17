@@ -2,12 +2,13 @@ import discord
 import re
 import asyncio  
 import urllib.request
+import html.parser
 
 class Module(object):
 	def __init__(self):
 		pass
 
-	def register(client):
+	def register(self,client):
 		client.messageHooks[re.compile('^!chuck$')] = RandomJoke("http://api.icndb.com/jokes/random",['value','joke'])
 		
 #	re.compile('^!joke$'): model.RandomJoke("https://webknox-jokes.p.mashape.com/jokes/random",['joke']),

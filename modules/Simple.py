@@ -6,11 +6,11 @@ class Module(object):
 	def __init__(self):
 		pass
 
-	def register(client):
+	def register(self,client):
 		client.messageHooks[re.compile('^!kick .*$')] = Kick()
 		client.messageHooks[re.compile('^!hello$')] = StringReply('Hello {0.author.mention}')
 		client.messageHooks[re.compile('^!help$')] = StringReply('Try !hello, !top or !source') 
-	re.compile('^!source$'): model.StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
+		client.messageHooks[re.compile('^!source$')] = StringReply('My source is located at https://github.com/Tommassino/LilBitchBot')
 		
 class Kick(object):
 	def __init__(self):

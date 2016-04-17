@@ -2,30 +2,34 @@ import discord
 import asyncio
 import json
 import time
-from os.path import dirname, basename, isfile
+from os.path import isfile
 import glob
 import importlib
+from importlib.machinery import SourceFileLoader
 
 
 class ClientConfig(object):
-	def __init__(self, configPath):
-		self.client=discord.Client()
+	def __init__(self, client, configPath):
+		self.client=client
 		self.messageHooks={} 
-		config = {}
+		self.config = {}
 	
 		with open(configPath,'r') as fp:
-			config=json.load(fp)
-			
-		modules = glob.glob("modules/*.py")
-		for f in modules if isfile(f):
-			print(f)
-			module = importlib.import_module(f)
-			module.Module().register(self.messageHooks)
+			self.config=json.load(fp)
 		
+		print('Loading modules...')
+		modules = glob.glob("modules/*.py")
+		for f in (m for m in modules if isfile(m)):
+			dir,mod = f.rsplit('/',1)
+			mod,py = mod.rsplit('.',1)
+			print('\t{0}'.format(mod))
+			module = SourceFileLoader(mod,f).load_module()
+			init = module.Module()
+			init.register(self)
 
-wrapper = ClientConfig('config.json')    
+client = discord.Client()		
 
-wrapper.client.run(wrapper.config['token'])
+wrapper = ClientConfig(client,'config.json')    
 
 @client.event
 @asyncio.coroutine
@@ -34,10 +38,11 @@ def on_message(message):
 	if message.author == wrapper.client.user:
 		return
 
-	for regexp in handles:
+	for regexp in wrapper.messageHooks:
+		print(regexp)
 		match = regexp.match(message.content)
 		if match:
-			yld = handles[regexp](message,match,wrapper.client)
+			yld = wrapper.messageHooks[regexp](message,match,wrapper.client)
 
 			if yld:
 				return yld
@@ -68,3 +73,4 @@ def on_ready():
 #		yield from wrapper.client.edit_profile(avatar=f.read())
 
 
+client.run(wrapper.config['token'])

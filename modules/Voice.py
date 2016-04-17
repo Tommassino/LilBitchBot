@@ -6,7 +6,7 @@ class Module(object):
 	def __init__(self):
 		self.voice = None
 
-	def register(client):
+	def register(self,client):
 		client.messageHooks[re.compile('^!join .*')] = JoinVoice('!join',self)
 		client.messageHooks[re.compile('^!play .*')] = PlaySound('!play',self)
 
@@ -28,7 +28,7 @@ class JoinVoice(object):
 class PlaySound(object):
 	def __init__(self,cmd,module):
 		self.cmd=cmd
-		self.module=module8
+		self.module=module
 
 	def __call__(self,msg,mtc,cli):
 		global voiceChannel
