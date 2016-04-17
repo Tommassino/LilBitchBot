@@ -1,43 +1,43 @@
 import discord
 import asyncio
-import re
-import model
 import json
 import time
+from os.path import dirname, basename, isfile
+import glob
+import importlib
 
-client = discord.Client()
 
-bitchCounter = model.JsonDictionary('lilbitch')
+class ClientConfig(object):
+	def __init__(self, configPath):
+		self.client=discord.Client()
+		self.messageHooks={} 
+		config = {}
+	
+		with open(configPath,'r') as fp:
+			config=json.load(fp)
+			
+		modules = glob.glob("modules/*.py")
+		for f in modules if isfile(f):
+			print(f)
+			module = importlib.import_module(f)
+			module.Module().register(self.messageHooks)
+		
 
-handles = {
-	re.compile('^!hello$'): model.StringReply('Hello {0.author.mention}'),
-	re.compile('^!help$'): model.StringReply('Try !hello, !top or !source'),
-	re.compile('^!source$'): model.StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
-	re.compile('.*lil.*bitch.*', flags=re.IGNORECASE): model.UserIncrement(bitchCounter),
-	re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE): model.ReplyTop(bitchCounter),
-	re.compile('^!top$'): model.ListTop(bitchCounter,3),
-	re.compile('^!chuck$'): model.RandomJoke("http://api.icndb.com/jokes/random",['value','joke']),
-#	re.compile('^!joke$'): model.RandomJoke("https://webknox-jokes.p.mashape.com/jokes/random",['joke']),
-	re.compile('^!kick .*$'): model.Kick(),
-	re.compile('^am i a lil bitch.*$', flags=re.IGNORECASE): model.ListBitch(bitchCounter),
-	re.compile('^!join .*'): model.JoinVoice('!join'),
-	re.compile('^!play .*'): model.PlaySound('!play')
-}
+wrapper = ClientConfig('config.json')    
 
-vo = None
+wrapper.client.run(wrapper.config['token'])
 
 @client.event
 @asyncio.coroutine
 def on_message(message):
-	global vo
 	# we do not want the bot to reply to itself
-	if message.author == client.user:
+	if message.author == wrapper.client.user:
 		return
 
 	for regexp in handles:
 		match = regexp.match(message.content)
 		if match:
-			yld = handles[regexp](message,match,client)
+			yld = handles[regexp](message,match,wrapper.client)
 
 			if yld:
 				return yld
@@ -61,16 +61,10 @@ def on_member_update(before, after):
 @asyncio.coroutine
 def on_ready():
 	print('Logged in as')
-	print(client.user.name)
-	print(client.user.id)
+	print(wrapper.client.user.name)
+	print(wrapper.client.user.id)
 	print('------')
-	with open('burger_small.jpg','rb') as f:
-		yield from client.edit_profile(avatar=f.read())
-
-config = {}
-
-with open('config.json','r') as fp:
-	config=json.load(fp)
+#	with open('burger_small.jpg','rb') as f:
+#		yield from wrapper.client.edit_profile(avatar=f.read())
 
 
-client.run(config['token'])
