@@ -23,9 +23,16 @@ class ClientConfig(object):
 			dir,mod = f.rsplit('/',1)
 			mod,py = mod.rsplit('.',1)
 			print('\t{0}'.format(mod))
+			load_module(mod)
+
+	def load_module(self, module, reload):
+		module = None
+		if reload:
+			module = SourceFileLoader(mod,f).reload_module()
+		else:
 			module = SourceFileLoader(mod,f).load_module()
-			init = module.Module()
-			init.register(self)
+		init = module.Module()
+		init.register(self)
 
 client = discord.Client()		
 
