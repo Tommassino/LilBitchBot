@@ -26,16 +26,13 @@ class ClientConfig(object):
 			self.load_module(mod)
 
 	def load_module(self, mod):
-		file = glob.glob("modules/{0}.py".format(mod)
+		file = glob.glob("modules/{0}.py".format(mod))
 		if len(file)==0 or not isfile(file[0]):
 			return None
 		f = file[0]
 		module = None
-		if reload:
-			module = SourceFileLoader(mod,f).reload_module()
-		else:
-			module = SourceFileLoader(mod,f).load_module()
-		init = module.Module()
+		module = SourceFileLoader(mod,f).load_module()
+		init = module.Module(self)
 		self.modules[mod]=init
 
 client = discord.Client()		
@@ -49,14 +46,16 @@ def on_message(message):
 	if message.author == wrapper.client.user:
 		return
 
-	for regexp in wrapper.messageHooks:
-		print(regexp)
-		match = regexp.match(message.content)
-		if match:
-			yld = wrapper.messageHooks[regexp](message,match,wrapper.client)
+	for moduleName in wrapper.modules:
+		module = wrapper.modules[moduleName]
+		for regexp in module.messageHooks:
+#			print(regexp)
+			match = regexp.match(message.content)
+			if match:
+				yld = module.messageHooks[regexp](message,match,wrapper.client)
 
-			if yld:
-				return yld
+				if yld:
+					return yld
 lasttime=0
 
 @client.event
