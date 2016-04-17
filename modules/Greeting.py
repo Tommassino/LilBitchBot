@@ -11,10 +11,10 @@ class Module(object):
 		
 class Greetings(object):
 	def __init__(self, message):
-		self.time = time()
+		self.time = time.time()
 		self.message = message
     
-	def __call__(self, changed, before, after): 
+	def __call__(self, changed, before, after, client): 
 		if not changed == 'status':
 			return None			
 		if before.status==discord.Status.offline and after.status==discord.Status.online:

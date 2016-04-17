@@ -69,7 +69,7 @@ def on_member_update(before, after):
 				if not hasattr(module,'memberUpdateHooks'):
 					continue
 				for hook in module.memberUpdateHooks:
-					yld = hook(attr,before,after)
+					yld = hook(attr,before,after, client)
 					if yld:
 						return yld 
 
