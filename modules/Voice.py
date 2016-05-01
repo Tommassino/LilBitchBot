@@ -9,7 +9,8 @@ class Module(object):
 		self.wrapper = wrapper
 		self.messageHooks = {
 			re.compile('^!join .*'): JoinVoice('!join',self),
-			re.compile('^!play .*'): PlaySound('!play',self, wrapper, 0.25)
+			re.compile('^!play .*'): PlaySound('!play',self, wrapper, 0.25),
+			re.compile('^!list'): ListVoice('!play',self)
 		}
 
 class JoinVoice(object):
@@ -27,6 +28,21 @@ class JoinVoice(object):
 			yield from cli.send_message(msg.channel,"Invalid channel name")
 			return
 		yield from cli.join_voice_channel(channel)
+		
+
+class ListVoice(object):
+	def __init__(self, cmd, module):
+		self.cmd=cmd
+		self.module=module
+
+	def __call__(self, msg, mtc, cli):
+		files = glob.glob("./audio/*")
+		names = []
+		for file in files:
+			names.append(os.path.basename(file))
+		s = ", ".join(names)
+		yield from cli.send_message(msg.channel, "Available sounds: {0}".format(s))
+		
 
 class PlaySound(object):
 	def __init__(self, cmd, module, wrapper, play_cost):
@@ -35,7 +51,7 @@ class PlaySound(object):
 		self.player=None
 		self.wrapper = wrapper
 		self.play_cost = play_cost
-		self.extensions = ["wav","mp3"]
+		self.extensions = [".wav",".mp3"]
 
 	def __call__(self, msg, mtc, cli):
 		coins = self.wrapper.money.get_money(msg.author)
@@ -51,6 +67,7 @@ class PlaySound(object):
 			return
 		file = files[0] #could throw warning if there are more than one
 		extension = os.path.splitext(file)[1]
+		print(extension)
 		if extension not in self.extensions:
 			yield from cli.send_message(msg.channel, "The audio file found has a unsupported extension, sorry man... :(")
 			return

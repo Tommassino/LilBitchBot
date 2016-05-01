@@ -64,6 +64,8 @@ class JsonDictionary(object):
 		return sorted_dict[:amount]
 	
 	def get_money(self, user):
+		if not user in self:
+			return 0
 		return self[user]
 	
 	def add_money(self, user, amount):
