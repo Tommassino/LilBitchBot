@@ -3,16 +3,82 @@ import asyncio
 import json
 import time
 from os.path import isfile
+import json
+import os.path
+import operator
 import glob
 import importlib
 from importlib.machinery import SourceFileLoader
 
+class DictEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+		
+class JsonDictionary(object):
+	def __init__(self, name):
+		self.dict={}
+		self.name=name
+		self.names={}
+		if os.path.isfile(name):
+			self.load_json(name)
+
+	def __setitem__(self,key,value):
+		self.dict[key.id]=value
+		self.names[key.id]=key.name
+		self.save_json(self.name)
+
+	def __getitem__(self,key):
+		return self.dict[key.id]
+
+	def __delitem__(self,key):
+		del self.dict[key.id]
+		del self.names[key.name]
+		self.save_json(self.name)
+
+	def __iter__(self):
+		return self.dict.items()
+
+	def __len__(self):
+		return len(self.dict)
+
+	def __contains__(self,item):
+		return self.dict.__contains__(item.id)
+
+	def items(self):
+		it = []
+		for key,value in self.dict.items():
+			it.append((self.names[key],value,))
+		return it
+
+	def load_json(self, file):
+		with open(file,'r') as fp:
+			self.__dict__=json.load(fp)
+			return None
+
+	def save_json(self,file):
+		with open(file,'w') as fp:
+			json.dump(self,fp,cls=DictEncoder)
+			
+	def get_top(self, amount):		
+		sorted_dict = sorted(self.items(), key=operator.itemgetter(1), reverse=True)
+		return sorted_dict[:amount]
+	
+	def get_money(self, user):
+		return self[user]
+	
+	def add_money(self, user, amount):
+		if user not in self:
+			self[user]=amount
+		else:
+			self[user]=self[user]+amount
+		
 
 class ClientConfig(object):
 	def __init__(self, client, configPath):
 		self.client=client
 		self.modules = {} 
 		self.config = {}
+		self.money = JsonDictionary('lilbitch')
 	
 		with open(configPath,'r') as fp:
 			self.config=json.load(fp)

@@ -1,14 +1,12 @@
 import discord
 import re
 import asyncio
-import json
-import os.path
 import operator
 import time
 
 class Module(object):
 	def __init__(self, wrapper):
-		self.bitchCounter = JsonDictionary('lilbitch')
+		self.bitchCounter = wrapper.money
 		self.messageHooks = {
 			re.compile('.*lil.*bitch.*', flags=re.IGNORECASE): UserIncrement(self.bitchCounter),
 			re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE): ReplyTop(self.bitchCounter),
@@ -23,15 +21,11 @@ class UserIncrement(object):
 		self.timeout=10
 
 	def __call__(self, orig_message, match,client):
-		dict=self.user_dict
-		author=orig_message.author.name+':'+orig_message.author.id
-		if author not in dict:
-			dict[author]=0
 		tm=time.time()
 		if orig_message.author.id in self.timeout_dict and tm-self.timeout_dict[orig_message.author.id] < 10:
 			return None
 		self.timeout_dict[orig_message.author.id]=tm
-		dict[author]=dict[author]+1
+		self.user_dict.add_money(orig_message.author, 1)
 		return None
 
 class ListBitch(object):
@@ -39,10 +33,7 @@ class ListBitch(object):
 		self.dict=dict
 
 	def __call__(self, msg, mc, cl):
-		author=msg.author.name+':'+msg.author.id
-		count=0
-		if author in self.dict:
-			count=self.dict[author]
+		count=self.dict.get_money(msg.author)
 		yield from cl.send_message(msg.channel,"You have {0} lil bitches!".format(count))
 
 class ListTop(object):
@@ -51,11 +42,11 @@ class ListTop(object):
 		self.top=top
 
 	def __call__(self, msg, mc,client):
-		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
+		sorted_dict = self.dict.get_top(self.top)
 		message = 'The top lil bitches:'
-		for i in range(0, min(len(self.dict),self.top)):
+		for i in range(0, len(sorted_dict)):
 			item = sorted_dict[i]
-			message=message+"\n{0}: {1}".format(item[0].split(':')[0],item[1])
+			message=message+"\n{0}: {1}".format(item[0],item[1])
 		yield from client.send_message(msg.channel,message)
 
 class ReplyTop(object):
@@ -63,45 +54,7 @@ class ReplyTop(object):
 		self.dict=dict
 
 	def __call__(self,msg,mc,client):
-		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
+		sorted_dict = self.dict.get_top(1)
 		if len(sorted_dict)>0:
 			top = sorted_dict[0]
-			yield from client.send_message(msg.channel,"{0} is a lil bitch!".format(top[0].split(':')[0]))
-		
-class JsonDictionary(object):
-	def __init__(self, name):
-		self.dict={}
-		self.name=name
-		if os.path.isfile(name):
-			self.load_json(name)
-
-	def __setitem__(self,key,value):
-		self.dict[key]=value
-		self.save_json(self.name)
-
-	def __getitem__(self,key):
-		return self.dict[key]
-
-	def __delitem__(self,key):
-		del self.dict[key]
-		self.save_json(self.name)
-
-	def __iter__(self):
-		return self.dict.items()
-
-	def __len__(self):
-		return len(self.dict)
-
-	def __contains__(self,item):
-		return self.dict.__contains__(item)
-
-	def items(self):
-		return self.dict.items()
-
-	def load_json(self, file):
-		with open(file,'r') as fp:
-			self.dict=json.load(fp)
-
-	def save_json(self,file):
-		with open(file,'w') as fp:
-			json.dump(self.dict,fp)
+			yield from client.send_message(msg.channel,"{0} is a lil bitch!".format(top[0]))
