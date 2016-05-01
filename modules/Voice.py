@@ -29,9 +29,12 @@ class PlaySound(object):
 	def __init__(self, cmd, module):
 		self.cmd=cmd
 		self.module=module
+		self.player=None
 
 	def __call__(self, msg, mtc, cli):
 		global voiceChannel
-		file = msg.content[len(self.cmd):].strip()+".wav"
-		player = self.module.voice.create_ffmpeg_player(file)
-		player.start()
+		print(self.player)
+		if not self.player or self.player.is_done():
+			file = "audio/"+msg.content[len(self.cmd):].strip()+".wav"
+			self.player = self.module.voice.create_ffmpeg_player(file)
+			self.player.start()

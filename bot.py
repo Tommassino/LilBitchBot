@@ -69,9 +69,10 @@ def on_member_update(before, after):
 				if not hasattr(module,'memberUpdateHooks'):
 					continue
 				for hook in module.memberUpdateHooks:
-					yld = hook(attr,before,after, client)
-					if yld:
-						return yld 
+					if hook[0]==attr and getattr(before,attr)==hook[1] and getattr(after,attr)==hook[2]:
+						yld = module.memberUpdateHooks[hook](attr, before, after, client)
+						if yld:
+							return yld 
 
 @client.event
 @asyncio.coroutine

@@ -7,7 +7,8 @@ class Module(object):
 		self.admins = wrapper.config['admins']
 		self.messageHooks = {
 			re.compile('^!kick .*$'): Kick(self),
-			re.compile('^!reload .*$'): ReloadModule(self, wrapper)
+			re.compile('^!reload .*$'): ReloadModule(self, wrapper),
+			re.compile('^!restart$'): Restart(self)
 		}
 
 class Kick(object):
@@ -44,3 +45,13 @@ class ReloadModule(object):
 		name=msg.content.split(' ')[1]
 		print('Reloading module {0}'.format(name))
 		self.wrapper.load_module(name)
+		print('Done')
+
+class Restart(object):
+	def __init__(self, module):
+		self.module=module
+
+	def __call__(self, msg, mtc, cli):
+		if int(msg.author.id) in self.module.admins:
+			quit()
+
