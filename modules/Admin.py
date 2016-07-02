@@ -8,15 +8,36 @@ class Module(object):
 		self.messageHooks = {
 			re.compile('^!kick .*$'): Kick(self),
 			re.compile('^!reload .*$'): ReloadModule(self, wrapper),
-			re.compile('^!restart$'): Restart(self)
+			re.compile('^!restart$'): Restart(self),
+			re.compile('^!nick .* .*$'): Nickname(self, wrapper)
 		}
+
+class Nickname(object):
+	def __init__(self, module, wrapper):
+		self.module=module
+		self.wrapper=wrapper
+
+	def __call__(self, msg, mtc, cli):
+		if not int(msg.author.id) in self.module.admins:
+			return None
+		name=msg.content.split(' ')[1]
+		nick=msg.content.split(' ')[2]
+
+		find = None
+		for m in msg.author.server.members:
+			if m.name==name:
+				find=m
+				break
+		print('Changing nickname of {0.name} to {1}'.format(find,nick))
+
+		yield from cli.change_nickname(find,nick)
 
 class Kick(object):
 	def __init__(self, module):
 		self.module = module
 
 	def __call__(self, msg, mtc, cli):
-		if not msg.author.id in self.module.admins:
+		if not int(msg.author.id) in self.module.admins:
 			return None
 		name=msg.content.split(' ')[1]
 		find = None

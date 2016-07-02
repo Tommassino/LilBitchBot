@@ -9,16 +9,21 @@ import operator
 import glob
 import importlib
 from importlib.machinery import SourceFileLoader
+import datetime
+
+class Object(object):
+    pass
 
 class DictEncoder(json.JSONEncoder):
     def default(self, o):
         return o.__dict__
 		
-class JsonDictionary(object):
+class MoneyDictionary(object):
 	def __init__(self, name):
 		self.dict={}
 		self.name=name
 		self.names={}
+		self.lastSpend={}
 		if os.path.isfile(name):
 			self.load_json(name)
 
@@ -47,7 +52,10 @@ class JsonDictionary(object):
 	def items(self):
 		it = []
 		for key,value in self.dict.items():
-			it.append((self.names[key],value,))
+			if key in self.names:
+				it.append((self.names[key],value,))
+			else:
+				it.append((key,value,))
 		return it
 
 	def load_json(self, file):
@@ -62,25 +70,47 @@ class JsonDictionary(object):
 	def get_top(self, amount):		
 		sorted_dict = sorted(self.items(), key=operator.itemgetter(1), reverse=True)
 		return sorted_dict[:amount]
+
+	def get_top_id(self, amount):
+		sorted_dict = sorted(self.dict.items(), key=operator.itemgetter(1), reverse=True)
+		return sorted_dict[:amount]
 	
 	def get_money(self, user):
 		if not user in self:
 			return 0
 		return self[user]
+
+	def get_lastSpent(self):
+		return self.lastSpend
+
+	def get_lastSpent(self, userId):
+		if userId not in self.lastSpend:
+			return time.mktime(datetime.datetime.today().timetuple())
+		return self.lastSpend[userId]
 	
 	def add_money(self, user, amount):
+		if amount<0:
+			self.lastSpend[user.id]=time.time()
 		if user not in self:
 			self[user]=amount
 		else:
 			self[user]=self[user]+amount
-		
+
+	def get_user(self, id):
+		user = Object()
+		user.id=id
+		user.name=self.names[id]
+		return user
+
+	def save(self):
+		self.save_json(self.name)
 
 class ClientConfig(object):
 	def __init__(self, client, configPath):
 		self.client=client
 		self.modules = {} 
 		self.config = {}
-		self.money = JsonDictionary('lilbitch')
+		self.money = MoneyDictionary('lilbitch')
 	
 		with open(configPath,'r') as fp:
 			self.config=json.load(fp)
