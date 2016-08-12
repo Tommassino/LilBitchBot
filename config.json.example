@@ -1,3 +1,21 @@
 {
-	"token": "put your token here"
+	"token": "your token here",
+	"admins": [
+		77731204559806464
+	],
+	"top_path": "top_picture.png",
+	"top_locations": [[124,35],[196,59],[66,68]],
+	"column_locations": [[155,200],[226,200],[84,200]],
+	"database":{
+		"user":"dbuser",
+		"password":"dbpassword
+		"database":"dbschema",
+		"host":"127.0.0.1",
+		"port":"3306"
+	},
+	"modules":{
+		"Greeting":{
+			"enabled":false
+		}
+	}
 }
