@@ -3,9 +3,11 @@ import re
 import asyncio  
 import urllib.request
 import html.parser
+import json
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.logger = wrapper.logger
 		self.messageHooks = {
 			re.compile('^!chuck$'): RandomJoke("http://api.icndb.com/jokes/random",['value','joke'])
 		#	re.compile('^!joke$'): model.RandomJoke("https://webknox-jokes.p.mashape.com/jokes/random",['joke']),

@@ -8,6 +8,7 @@ import io
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.logger = wrapper.logger
 		self.wrapper = wrapper
 		self.audio_lengths = {}
 		self.messageHooks = {
@@ -87,12 +88,16 @@ class PlaySound(object):
 		self.extensions = [".wav",".mp3"]
 
 	def __call__(self, msg, mtc, cli):
-		coins = self.wrapper.money.get_money(msg.author)
+		coins = self.wrapper.money.get_points(msg.author.id)
+		if not coins:
+			coins = 0
+		else:
+			coins=coins[0]
 		audio_name=msg.content[len(self.cmd):].strip()
 		duration = self.module.poll_length(audio_name)
 		cost = duration*self.play_cost
 		if coins < cost:
-			yield from cli.send_message(msg.channel, "Fuck off, not enough lil bitch credit!")
+			yield from cli.send_message(msg.channel, "Fuck off, not enough lil bitch credit (got {0:.2f}, need {1})!".format(coins,cost))
 			return
 		if not cli.is_voice_connected(msg.server):
 			yield from cli.send_message(msg.channel, "Cant play if im not in a voice channel, use !join to tell me where to play.")
@@ -109,7 +114,7 @@ class PlaySound(object):
 			return
 		if not self.player or self.player.is_done():
 			print("Playing audio file {0}".format(file))
-			self.wrapper.money.add_money(msg.author, -cost)
+			self.wrapper.money.add_points(msg.author.id, -cost)
 			self.player = cli.voice_client_in(msg.server).create_ffmpeg_player(file)
 			self.player.start()
 

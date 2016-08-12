@@ -5,6 +5,7 @@ import time
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.logger = wrapper.logger
 		self.memberUpdateHooks = {
 			tuple(['status', discord.Status.offline, discord.Status.online]): Greetings('Welcome back {0.name} you lil bitch!'),
 			tuple(['game', None, discord.Game(name='DOTA 2')]): GameAlert('TIME FOR DOTA BITCHES')

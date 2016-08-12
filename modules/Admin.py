@@ -5,6 +5,7 @@ import asyncio
 class Module(object):
 	def __init__(self, wrapper):
 		self.admins = wrapper.config['admins']
+		self.logger = wrapper.logger
 		self.messageHooks = {
 			re.compile('^!kick .*$'): Kick(self),
 			re.compile('^!reload .*$'): ReloadModule(self, wrapper),
@@ -55,18 +56,13 @@ class ReloadModule(object):
 		self.module = module
 
 	def __call__(self, msg, mtc, cli):
-#		print(self.module.admins.index(msg.author.id))
+		self.wrapper.logger.debug(self.module.admins.index(msg.author.id))
 		if not int(msg.author.id) in self.module.admins:
-			print(msg.author.id)
-			print(self.module.admins[0])
-			print(self.module.admins[0]==msg.author.id)
-			print(type(msg.author.id))
-			print(type(self.module.admins[0]))
+			self.wrapper.logger.debug("Unauthorised access to !reload {0} - {1}".format(msg.author,self.module.admins))
 			return None
 		name=msg.content.split(' ')[1]
-		print('Reloading module {0}'.format(name))
+		self.wrapper.logger.info('Reloading module {0}'.format(name))
 		self.wrapper.load_module(name)
-		print('Done')
 
 class Restart(object):
 	def __init__(self, module):

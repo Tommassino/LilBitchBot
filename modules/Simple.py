@@ -4,10 +4,12 @@ import asyncio
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.logger = wrapper.logger
 		self.messageHooks = {
 			re.compile('^!hello$'): StringReply('Hello {0.author.mention}'),
 			re.compile('^!help$'): StringReply('Try !hello, !top or !source'), 
-			re.compile('^!source$'): StringReply('My source is located at https://github.com/Tommassino/LilBitchBot')
+			re.compile('^!source$'): StringReply('My source is located at https://github.com/Tommassino/LilBitchBot'),
+			re.compile('^!guild$'): StringReply('The guild website is http://lessthanthree.guildlaunch.com/')
 		}		
 		
 class StringReply(object):

@@ -11,91 +11,118 @@ import json
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.admins = wrapper.config['admins']
 		self.bitchCounter = wrapper.money
 		self.messageHooks = {
 			re.compile('.*lil.*bitch.*', flags=re.IGNORECASE): UserIncrement(self.bitchCounter),
 			re.compile('.*who.*lil.*bitch.*', flags=re.IGNORECASE): ReplyTop(self.bitchCounter),
 			re.compile('^!top$'): ListTop(self.bitchCounter,3),
 			re.compile('^am i a lil bitch.*$', flags=re.IGNORECASE): ListBitch(self.bitchCounter),
-			re.compile('^!drawTop$', flags=re.IGNORECASE): DrawTop(wrapper.money,3,wrapper)
+			re.compile('^!drawTop$', flags=re.IGNORECASE): DrawTop(wrapper.money,3,wrapper),
+			re.compile('^!give (.*) (.*)'): Grant(wrapper.money, self)
 		}
 		self.lastSpendTime = {}
+		
+def find_member_id(server, user_name):
+	for member in server.members:
+		if member.name==str(user_name):
+			print(member.name)
+			return member
+	return None
+		
+def find_member(server, user_id):
+	for member in server.members:
+		if member.id==str(user_id):
+			return member
+	return None
+	
+def get_name(server, user_id):
+	member = find_member(server,user_id)
+	if member:
+		return member.name
+	return 'unknown'
+	
+class Grant(object):
+	def __init__(self, money, module):
+		self.money=money
+		self.module=module
+
+	def __call__(self, msg, match, client):
+		if not int(msg.author.id) in self.module.admins:
+			return None		
+		name=match.group(1)
+		points=int(match.group(2))
+		user = find_member_id(msg.server, name)
+		if user:
+			self.money.add_points(user.id, points)
+			yield from client.send_message(msg.channel,"Granted user {0} {1} lil bitches!".format(name, points))
+		else:
+			yield from client.send_message(msg.channel,"Cannot find user {0}!".format(name))
+		return None
 
 class UserIncrement(object):
-	def __init__(self, user_dict):
-		self.user_dict=user_dict
+	def __init__(self, user_db):
+		self.user_db=user_db
 		self.timeout_dict={}
 		self.timeout=10
 
-	def __call__(self, orig_message, match,client):
+	def __call__(self, msg, match,client):
 		tm=time.time()
-		if orig_message.author.id in self.timeout_dict and tm-self.timeout_dict[orig_message.author.id] < 10:
+		if msg.author.id in self.timeout_dict and tm-self.timeout_dict[msg.author.id] < 10:
 			return None
-		self.timeout_dict[orig_message.author.id]=tm
-		self.user_dict.add_money(orig_message.author, 1)
+		self.timeout_dict[msg.author.id]=tm
+		self.user_db.add_points(msg.author.id, 1)
 		return None
 
 class ListBitch(object):
-	def __init__(self, dict):
-		self.dict=dict
+	def __init__(self, user_db):
+		self.user_db=user_db
 
 	def __call__(self, msg, mc, cl):
-		count=self.dict.get_money(msg.author)
-		yield from cl.send_message(msg.channel,"You have {0} lil bitches!".format(count))
+		count=self.user_db.get_points(msg.author.id)
+		if count:
+			yield from cl.send_message(msg.channel,"You have {0} lil bitches!".format(count[0]))
 
 class ListTop(object):
-	def __init__(self, dict, top):
-		self.dict=dict
+	def __init__(self, user_db, top):
+		self.user_db=user_db
 		self.top=top
 
 	def __call__(self, msg, mc,client):
-		self.devalue()
-		sorted_dict = self.dict.get_top(self.top)
+		top_users = self.user_db.get_top(self.top)
+		print(top_users)
 		message = 'The top lil bitches:'
-		for i in range(0, len(sorted_dict)):
-			item = sorted_dict[i]
-			message=message+"\n{0}: {1:.2f}".format(item[0],item[1])
+		for i in range(0, len(top_users)):
+			item = top_users[i]
+			name = get_name(msg.server,item[0])
+			message=message+"\n{0}: {1:.2f}".format(name,item[1])
 		yield from client.send_message(msg.channel,message)
 
-	def devalue(self):
-		now = time.time()
-		count = len(self.dict.dict.items())
-		for id,value in self.dict.dict.items():
-			spent = self.dict.get_lastSpent(id)
-#			print("{0}: {1} - {2}".format(id,value,now-spent))
-			if now-spent>86400: #devalue
-				value_devalue = value*0.1
-				self.dict.dict[id]=value-value_devalue
-				for add_id, add_value in self.dict.dict.items():
-					self.dict.dict[add_id]=value_devalue/count+add_value
-				self.dict.lastSpend[id]=time.time()
-		self.dict.save()
-#			self.dict.lastSpend[id]=time.time()
-
 class ReplyTop(object):
-	def __init__(self, dict):
-		self.dict=dict
+	def __init__(self, user_db):
+		self.user_db=user_db
 
 	def __call__(self,msg,mc,client):
-		sorted_dict = self.dict.get_top(1)
-		if len(sorted_dict)>0:
-			top = sorted_dict[0]
-			yield from client.send_message(msg.channel,"{0} is a lil bitch!".format(top[0]))
+		top_user = self.user_db.get_top(1)
+		if len(top_user)>0:
+			top = top_user[0]               
+			name = get_name(msg.server,top[0])
+			yield from client.send_message(msg.channel,"{0} is a lil bitch!".format(name))
 
 class DrawTop(object):
-	def __init__(self, dict, top, wrapper):
-		self.dict=dict
+	def __init__(self, user_db, top, wrapper):
+		self.user_db=user_db
 		self.top=top
 		self.wrapper=wrapper
 
 	def find_member(self, members, user_id):
 		for member in members:
-			if member.id==user_id:
+			if member.id==str(user_id):
 				return member
 		return None
 	
 	def __call__(self,msg,mc,client):
-		top_users = self.dict.get_top_id(self.top)
+		top_users = self.user_db.get_top(self.top)
 		pic_path = self.wrapper.config['top_path']
 		avatar_locations = self.wrapper.config['top_locations']
 		column_locations = self.wrapper.config['column_locations']
@@ -110,7 +137,6 @@ class DrawTop(object):
 		for user in top_users:
 			id=id+1
 			member = self.find_member(msg.server.members, user[0])
-
 			if member.avatar_url:
 				req = urllib.request.Request(member.avatar_url, headers=hds)
 				with urllib.request.urlopen(req) as url:

@@ -5,6 +5,7 @@ import cymysql
 
 class Module(object):
 	def __init__(self, wrapper):
+		self.logger = wrapper.logger
 		self.database = cymysql.connect(host='127.0.0.1', port=3306, user='crez', passwd='lilbitch', db='fishing')
 
 		self.messageHooks = {
